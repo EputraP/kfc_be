@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 
+	logs "github.com/EputraP/kfc_be/internal/util/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -26,9 +27,18 @@ func connectDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, port, user, pass, dbName)
 
 	log.Println("Connecting with DSN: ", dsn)
+	logs.Info("connectDB", "Connecting with DSN: ", map[string]string{
+		"dsn": dsn,
+	})
 	dbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
+	if err != nil {
+		logs.Error("connectDB", "error gorm.Open: ", map[string]string{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
 
 	return dbConn, err
 }
@@ -37,11 +47,12 @@ func connect() {
 	dbConn, err := connectDB()
 
 	if err != nil {
-		log.Println("Failed connecting to db", err)
-		log.Fatalln("Failed connecting to db", err)
+		logs.Error("connect", "error dbConn.DB: ", map[string]string{
+			"error": err.Error(),
+		})
 	}
 
-	log.Println("Success connecting to db")
+	logs.Info("connectDB", "Success connecting to db", nil)
 
 	db = dbConn
 }
