@@ -6,17 +6,28 @@ import (
 	"os"
 
 	dbstore "github.com/EputraP/kfc_be/internal/store"
+	"github.com/EputraP/kfc_be/internal/util/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/lpernett/godotenv"
 )
 
 func main() {
 
-	err := godotenv.Load()
+	if err := logger.Init("app.log"); err != nil {
+		logger.Error("main", "Failed to initialize logger:", map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
 
+	logger.Info("main", "Starting application...", nil)
+
+	err := godotenv.Load()
 	if err != nil {
-		log.Println("error loading env", err)
-		log.Fatalln("error loading env", err)
+		logger.Error("main", "Error loading .env file", map[string]string{
+			"error": err.Error(),
+		})
+		return
 	}
 
 	prepare()
@@ -29,6 +40,11 @@ func main() {
 		port = "8080"
 	}
 
+	logger.Info("main",
+		"Server is starting...", map[string]string{
+			"port": port,
+		})
+
 	if err := srv.Run(fmt.Sprintf(":%s", port)); err != nil {
 		log.Println("Error running gin server: ", err)
 		log.Fatalln("Error running gin server: ", err)
@@ -37,8 +53,16 @@ func main() {
 }
 
 func prepare() {
+	logger.Info("main", "Initializing dependencies...", nil)
+
 	_ = dbstore.Get()
 
-	return
+	logger.Info("main", "Initializing repositories...", nil)
+
+	logger.Info("main", "Initializing services...", nil)
+
+	logger.Info("main", "Initializing handlers...", nil)
+
+	logger.Info("main", "Application initialized successfully.", nil)
 
 }
