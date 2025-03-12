@@ -1,1 +1,4 @@
 .env
+*.log
+.gitignore
+go.sum
