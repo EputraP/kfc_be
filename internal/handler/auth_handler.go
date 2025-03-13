@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/EputraP/kfc_be/internal/dto"
 	errs "github.com/EputraP/kfc_be/internal/errors"
@@ -80,7 +81,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("refresh-token", resp.RefreshToken, 3600*24*30, "", "", true, true)
+	c.SetCookie("access-token", resp.AccesToken, 3600*24*30, "", "/", true, true)
+
 	response.JSON(c, 200, "Login success", resp)
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	c.SetCookie("refresh-token", "", -1, "", "", true, true)
+	c.SetCookie("access-token", "", -1, "", "/", true, true)
+
+	response.JSON(c, 200, "Logout success", nil)
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
