@@ -66,7 +66,7 @@ func (r *authRepository) SearchUserByUsername(input *dto.RegisterBody) (*model.U
 
 	resultModel := &model.User{}
 
-	sqlScript := `SELECT id, username
+	sqlScript := `SELECT id, username, "password"
 				  FROM
 					users u 
 				  WHERE

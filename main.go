@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 
+	"github.com/EputraP/kfc_be/internal/constant"
 	"github.com/EputraP/kfc_be/internal/handler"
 	"github.com/EputraP/kfc_be/internal/middleware"
 	"github.com/EputraP/kfc_be/internal/repository"
@@ -12,6 +15,7 @@ import (
 	dbstore "github.com/EputraP/kfc_be/internal/store"
 	"github.com/EputraP/kfc_be/internal/util/hasher"
 	"github.com/EputraP/kfc_be/internal/util/logger"
+	"github.com/EputraP/kfc_be/internal/util/tokenprovider"
 	"github.com/gin-gonic/gin"
 	"github.com/lpernett/godotenv"
 )
@@ -62,19 +66,43 @@ func main() {
 
 }
 
-func prepare() (handlers *routes.Handlers, middleware *routes.Middlewares) {
-	logger.Info("main", "Initializing dependencies...", nil)
+func prepare() (handlers *routes.Handlers, middlewares *routes.Middlewares) {
+	logger.Info("main", "Initializing JWT...", nil)
+
 	hasher := hasher.NewBcrypt(10)
+	appName := os.Getenv(constant.EnvKeyAppName)
+	jwtSecret := os.Getenv(constant.EnvKeyJWTSecret)
+	refreshTokenDurationStr := os.Getenv(constant.EnvKeyRefreshTokenDuration)
+
+	accessTokenDurationStr := os.Getenv(constant.EnvKeyAccessTokenDuration)
+
+	refreshTokenDuration, err := strconv.Atoi(refreshTokenDurationStr)
+	if err != nil {
+		log.Fatalln("error creating handlers and middleware", err)
+	}
+
+	accessTokenDuration, err := strconv.Atoi(accessTokenDurationStr)
+	if err != nil {
+		log.Fatalln("error creating handlers and middlewares", err)
+	}
+
+	jwtProvider := tokenprovider.NewJWT(appName, jwtSecret, refreshTokenDuration, accessTokenDuration)
+
+	middlewares = &routes.Middlewares{
+		Auth: middleware.CreateAuth(jwtProvider),
+	}
+
+	logger.Info("main", "Initializing db connection...", nil)
 	db := dbstore.Get()
 
 	logger.Info("main", "Initializing repositories...", nil)
 	authRepo := repository.NewAuthRepository(db)
 
 	logger.Info("main", "Initializing services...", nil)
-	authService := service.NewAuthService(service.AuthServiceConfig{AuthRepo: authRepo, Hasher: hasher})
+	authService := service.NewAuthService(service.AuthServiceConfig{AuthRepo: authRepo, Hasher: hasher, JwtProvider: jwtProvider})
 
 	logger.Info("main", "Initializing handlers...", nil)
-	authHandler := handler.NewAuthHandler(handler.AuthHandlerConfig{AuthService: authService})
+	authHandler := handler.NewAuthHandler(handler.AuthHandlerConfig{AuthService: authService, TokenProvider: jwtProvider})
 
 	handlers = &routes.Handlers{
 		Auth: authHandler,
