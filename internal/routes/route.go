@@ -17,5 +17,7 @@ func Build(srv *gin.Engine, h *Handlers, middlewares *Middlewares) {
 
 	auth := srv.Group("/auth")
 	auth.POST("/register", h.Auth.CreateUser)
+	auth.POST("/login", h.Auth.Login)
+	auth.GET("/refresh", h.Auth.Refresh)
 
 }
