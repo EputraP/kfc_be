@@ -23,7 +23,7 @@ This project is built using the following technologies:
 |--------|----------------|------------------------|
 | **POST**    | `/auth/register`    | Create user account     |
 | **POST**   | `/auth/login`     | Login user   |
-| **POST**   | `/auth/refresh`   | Renew access token      |
+| **GET**   | `/auth/refresh`   | Renew access token      |
 | **GET**    | `/auth/logout` | Logout |
 
 
